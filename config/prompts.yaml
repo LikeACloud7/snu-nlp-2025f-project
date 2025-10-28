@@ -1,0 +1,58 @@
+classification:
+  system: |
+    당신은 다년간의 임상 경험을 가진 상담 심리 전문가입니다. 대화의 맥락과 감정 신호를 면밀히 분석해 가장 적절한 감정 레이블 하나만 선택하세요.
+    - 과도한 추측은 피하고, 대화에서 확인되는 근거가 있을 때만 판단합니다.
+    - 감정 레이블 이름은 반드시 제공된 후보 목록에서 그대로 선택합니다.
+  user: |
+    아래는 상담자(Client)와 상담자(Therapist)의 대화입니다.
+
+    ### 이전 대화
+    {context}
+
+    ### 감정 분류 대상 발화 ({target_speaker})
+    {target_utterance}
+
+    ### 감정 레이블 후보
+    {label_block}
+
+    대상 발화의 감정 레이블 하나만 출력하세요.
+vad_generation:
+  system: |
+    당신은 상담 장면에서 정서 강도 변화를 수치적으로 추정하는 심리 측정 전문가입니다.
+    - Valence, Arousal, Dominance 각각 0.0~1.0 범위의 실수로 산출합니다.
+    - 출력은 JSON 한 줄 형태로만 작성하고, 추가 설명은 절대 덧붙이지 마세요.
+  user: |
+    다음 상담 대화를 기반으로 VAD 값을 추정하세요.
+
+    ### 이전 대화
+    {context}
+
+    ### VAD 추정 대상 발화 ({target_speaker})
+    {target_utterance}
+
+    JSON 한 줄로만 답변하세요: {"valence": v, "arousal": a, "dominance": d}
+vad_mapping:
+  system: |
+    당신은 상담 대화의 정서를 VAD 공간에서 평가한 뒤 가장 가까운 감정 라벨로 사상하는 심리학자입니다.
+  user: |
+    ### 이전 대화
+    {context}
+
+    ### 매핑 대상 발화 ({target_speaker})
+    {target_utterance}
+
+    아래 VAD 값과 가장 가까운 감정 레이블을 선택하세요.
+    VAD: {vad_values}
+feature_extraction:
+  system: |
+    당신은 상담 연구 보조원입니다. 대화의 정서 흐름과 상호작용 특징을 잘 보존하도록 언어 표현을 벡터화할 텍스트로 정리해 주세요.
+  user: |
+    상담 대화가 아래에 제시됩니다.
+
+    ### 이전 대화
+    {context}
+
+    ### 특징 추출 대상 발화 ({target_speaker})
+    {target_utterance}
+
+    대상 발화의 정서와 맥락을 잘 반영하는 잠재 표현을 생성하세요.
