@@ -207,3 +207,9 @@ marimo/_lsp/
 __marimo__/
 
 .vscode/
+
+data/raw/training/
+data/raw/validation/
+data/formatted/*.jsonl
+
+.DS_Store
