@@ -1,17 +1,29 @@
 import argparse
 import os
+from inspect import signature
 
 from datasets import load_dataset
 from peft import LoraConfig, get_peft_model
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
-from trl import SFTTrainer
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from trl import SFTConfig, SFTTrainer
 
 from utils import EmotionCatalog, ensure_catalog, label_block, load_prompt_templates, prepare_sft_dataset
 
 
 def parse_args():
     parser = argparse.ArgumentParser(description="LoRA SFT for direct emotion label generation.")
-    parser.add_argument("--dataset_name", required=True, help="Hugging Face dataset name or path.")
+    parser.add_argument(
+        "--dataset_name",
+        help="Hugging Face dataset identifier or dataset directory to load via load_dataset().",
+    )
+    parser.add_argument(
+        "--train_file",
+        help="Local JSON/JSONL file to use for the training split (loaded via datasets.load_dataset('json', ...)).",
+    )
+    parser.add_argument(
+        "--validation_file",
+        help="Optional JSON/JSONL file for evaluation split when --eval_split is provided.",
+    )
     parser.add_argument("--train_split", default="train")
     parser.add_argument("--eval_split", default="validation")
     parser.add_argument("--label_key", default="emotion")
@@ -55,9 +67,19 @@ def main():
     args = parse_args()
     os.makedirs(args.output_dir, exist_ok=True)
 
-    dataset = load_dataset(args.dataset_name)
+    if not args.dataset_name and not args.train_file:
+        raise ValueError("Provide either --dataset_name or --train_file.")
+
+    if args.train_file:
+        data_files = {args.train_split: args.train_file}
+        if args.validation_file and args.eval_split:
+            data_files[args.eval_split] = args.validation_file
+        dataset = load_dataset("json", data_files=data_files)
+    else:
+        dataset = load_dataset(args.dataset_name)
+
     train_ds = dataset[args.train_split]
-    eval_ds = dataset[args.eval_split] if args.eval_split in dataset else None
+    eval_ds = dataset[args.eval_split] if args.eval_split and args.eval_split in dataset else None
 
     catalog = EmotionCatalog.from_dataset(train_ds, label_key=args.label_key)
     ensure_catalog(args.output_dir, catalog)
@@ -90,13 +112,12 @@ def main():
     )
     model = get_peft_model(model, lora_config)
 
-    training_args = TrainingArguments(
+    training_kwargs = dict(
         output_dir=args.output_dir,
         num_train_epochs=args.num_train_epochs,
         per_device_train_batch_size=args.per_device_train_batch_size,
         per_device_eval_batch_size=args.per_device_eval_batch_size,
         gradient_accumulation_steps=args.gradient_accumulation_steps,
-        evaluation_strategy="steps" if eval_sft else "no",
         eval_steps=500,
         logging_steps=50,
         warmup_ratio=args.warmup_ratio,
@@ -107,16 +128,24 @@ def main():
         report_to="none",
         seed=args.seed,
         max_grad_norm=1.0,
+        max_length=args.max_seq_length,
+        dataset_text_field="text",
+        packing=False,
     )
+    eval_strategy_value = "steps" if eval_sft else "no"
+    training_sig = signature(SFTConfig.__init__)
+    if "evaluation_strategy" in training_sig.parameters:
+        training_kwargs["evaluation_strategy"] = eval_strategy_value
+    else:
+        training_kwargs["eval_strategy"] = eval_strategy_value
+
+    training_args = SFTConfig(**training_kwargs)
 
     trainer = SFTTrainer(
         model=model,
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         train_dataset=train_sft,
         eval_dataset=eval_sft,
-        dataset_text_field="text",
-        max_seq_length=args.max_seq_length,
-        packing=False,
         args=training_args,
     )
     trainer.train()

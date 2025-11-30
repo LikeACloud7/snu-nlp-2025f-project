@@ -19,7 +19,7 @@ classification:
 vad_generation:
   system: |
     당신은 상담 장면에서 정서 강도 변화를 수치적으로 추정하는 심리 측정 전문가입니다.
-    - Valence, Arousal, Dominance 각각 0.0~1.0 범위의 실수로 산출합니다.
+    - Valence, Arousal, Dominance 각각 -1.0~1.0 범위의 실수로 산출합니다.
     - 출력은 JSON 한 줄 형태로만 작성하고, 추가 설명은 절대 덧붙이지 마세요.
   user: |
     다음 상담 대화를 기반으로 VAD 값을 추정하세요.
@@ -30,7 +30,7 @@ vad_generation:
     ### VAD 추정 대상 발화 ({target_speaker})
     {target_utterance}
 
-    JSON 한 줄로만 답변하세요: {"valence": v, "arousal": a, "dominance": d}
+    JSON 한 줄로만 답변하세요: {{"valence": v, "arousal": a, "dominance": d}}
 vad_mapping:
   system: |
     당신은 상담 대화의 정서를 VAD 공간에서 평가한 뒤 가장 가까운 감정 라벨로 사상하는 심리학자입니다.
