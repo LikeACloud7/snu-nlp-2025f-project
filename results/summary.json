@@ -1,0 +1,34 @@
+[
+  {
+    "task": "direct_classification",
+    "variant": "base",
+    "output_path": "results/validation_eval/direct_classification__base.json",
+    "total": 6640,
+    "correct": 850,
+    "accuracy": 0.1280120481927711
+  },
+  {
+    "task": "direct_classification",
+    "variant": "direct-class-train",
+    "output_path": "results/validation_eval/direct_classification__direct-class-train.json",
+    "total": 6640,
+    "correct": 3324,
+    "accuracy": 0.5006024096385542
+  },
+  {
+    "task": "vad_generation",
+    "variant": "base",
+    "output_path": "results/validation_eval/vad_generation__base.json",
+    "total": 6625,
+    "correct": 231,
+    "accuracy": 0.03486792452830189
+  },
+  {
+    "task": "vad_generation",
+    "variant": "vad-gen-train",
+    "output_path": "results/validation_eval/vad_generation__vad-gen-train.json",
+    "total": 6640,
+    "correct": 3513,
+    "accuracy": 0.529066265060241
+  }
+]
