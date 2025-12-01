@@ -33,7 +33,7 @@ def parse_args():
     )
     parser.add_argument(
         "--model_name",
-        default="/data01/jongwonlim/cmv/snu-nlp-2025f-project/models/snapshots/0e9e39f249a16976918f6564b8830bc894c89659",
+        default="meta-llama/Llama-3.1-8B-Instruct",
         help="Identifier or local path for the original base model.",
     )
     parser.add_argument(
