@@ -184,21 +184,7 @@ While the Feature-Based Direct model achieved the highest raw accuracy, the **Ge
 
 ---
 
-### 2. Can LLMs Predict Emotional Values? (VAD Precision)
-
-We tested if LLMs can directly generate accurate numerical values for emotion.
-**Result**: They are excellent at **Valence (Good/Bad)** but struggle with **Arousal (Calm/Excited)**.
-
-![VAD MSE](results/plots/vad_mse.png)
-
-- **Valence (MSE 0.050)**: The model perfectly understands the positivity/negativity of the dialogue.
-- **Arousal (MSE 0.120)**: Inferring emotional intensity from text alone is challenging for the LLM without audio/visual cues.
-
----
-
-### 3. Detailed Analysis
-
-#### 2. Effect of Fine-tuning (Base vs. Trained)
+### 2. Effect of Fine-tuning (Base vs. Trained)
 
 Does the LLM already know these emotions, or does it need to learn them?
 Our results show that **Fine-tuning is mandatory** for this task. The Base model (Llama-3.1-8B-Instruct) completely fails to understand the specific 60-class ontology in a Zero-shot setting.
