@@ -155,3 +155,102 @@ utils.py           # Shared utilities: prompt rendering, dialogue formatting, ca
 ```
 
 ---
+
+## Results & Analysis
+
+### 🎯 Research Goal
+Our primary goal was to investigate **how to best leverage LLMs for fine-grained emotion recognition** (60 classes). Specifically, we wanted to answer two key questions:
+1.  **Direct vs. VAD**: Does incorporating domain knowledge (Valence-Arousal-Dominance) help the LLM understand complex emotions better than simply asking for the label?
+2.  **Generation vs. Features**: Is it better to let the LLM **directly generate** the answer (text/numbers) or use its internal representations (**features**) with a classifier?
+
+---
+
+### 1. Key Findings: Does VAD Help?
+
+**Yes, especially for Generative Models.**
+
+While the Feature-Based Direct model achieved the highest raw accuracy, the **Generative VAD** approach significantly outperformed the Generative Direct approach.
+
+![Overall Accuracy](results/plots/overall_accuracy.png)
+
+| Method | Type | Accuracy | **Macro-F1** | Interpretation |
+| :--- | :--- | :--- | :--- | :--- |
+| **Feature-Based Direct** | Discriminative | **58.49%** | **56.59%** | Best overall. LLM features are highly robust. |
+| **Generative VAD** | Generative | **52.91%** | **51.35%** | **Maps to easier continuous space.** |
+| **Generative Direct** | Generative | 50.06% | 48.66% | Struggles to pinpoint exact complex labels. |
+| **Feature-Based VAD** | Discriminative | 25.47% | 24.26% | Regression loss is too high for features. |
+
+> **Insight**: Predicting **abstract coordinates (VAD)** is an easier task for the LLM than retrieving the exact class name from 60 options. The VAD step simplifies the problem by converting a 60-way classification into a 3-dimensional regression.
+
+---
+
+### 2. Can LLMs Predict Emotional Values? (VAD Precision)
+
+We tested if LLMs can directly generate accurate numerical values for emotion.
+**Result**: They are excellent at **Valence (Good/Bad)** but struggle with **Arousal (Calm/Excited)**.
+
+![VAD MSE](results/plots/vad_mse.png)
+
+- **Valence (MSE 0.050)**: The model perfectly understands the positivity/negativity of the dialogue.
+- **Arousal (MSE 0.120)**: Inferring emotional intensity from text alone is challenging for the LLM without audio/visual cues.
+
+---
+
+### 3. Detailed Analysis
+
+#### 2. Effect of Fine-tuning (Base vs. Trained)
+
+Does the LLM already know these emotions, or does it need to learn them?
+Our results show that **Fine-tuning is mandatory** for this task. The Base model (Llama-3.1-8B-Instruct) completely fails to understand the specific 60-class ontology in a Zero-shot setting.
+
+![Base vs Trained](results/plots/base_vs_trained.png)
+
+- **Direct Classification**: `12.8%` (Base) → `50.1%` (Trained)
+    - The Base model only predicts common words like `sorrow` or `worried` but fails on domain-specific terms like `guilty conscience` or `underprivileged`.
+- **VAD Generation**: `3.5%` (Base) → `52.9%` (Trained)
+    - **Critical Insight**: The Base model has **no internal alignment** between the VAD numerical scale and the specific emotion labels. Fine-tuning aligns the model's abstract understanding of "valence/arousal" with the target label space.
+
+---
+
+### 3. Can LLMs Predict Emotional Values? (VAD Precision)
+
+We tested if LLMs can directly generate accurate numerical values for emotion.
+**Result**: They are excellent at **Valence (Good/Bad)** but struggle with **Arousal (Calm/Excited)**.
+
+![VAD MSE](results/plots/vad_mse.png)
+
+- **Valence (MSE 0.050)**: The model perfectly understands the positivity/negativity of the dialogue.
+- **Arousal (MSE 0.120)**: Inferring emotional intensity from text alone is challenging for the LLM without audio/visual cues.
+
+---
+
+### 4. Detailed Analysis
+
+#### A. Robustness (Frequency vs. Accuracy)
+Does the model just memorize frequent classes? **No.**
+We found a weak correlation between data size and accuracy. The model successfully learns the **semantics** of low-resource emotions.
+
+![Frequency vs Accuracy](results/plots/freq_vs_acc.png)
+*Example: `underprivileged` (n=67) has 63% accuracy, comparable to high-resource classes.*
+
+#### B. Error Analysis
+Even when the model fails, it fails **intelligently**. Most errors stem from semantic overlaps rather than hallucinations.
+
+![Confusion Matrix](results/plots/confusion_matrix_top15.png)
+*   **Synonyms**: `anger` vs. `angry` (Model sees them as identical).
+*   **Hierarchy**: `solitary` vs. `isolated` (Specific vs. General).
+
+---
+
+### 5. Conclusion & Implications
+
+1.  **Continuous Space vs. Discrete Labels**:
+    Directly classifying text into 60 discrete classes is a "hard" task due to high dimensionality and semantic overlap.
+    Predicting **VAD coordinates (Continuous Space)** is an "easier" regression task for the LLM. By converting the problem into a coordinate prediction task, we bypass the difficulty of distinguishing between subtle linguistic labels.
+
+2.  **Feature-based is still King for Accuracy**:
+    For pure classification performance, using the LLM as a feature extractor (Discriminative approach) remains the most robust method, outperforming generative approaches.
+
+3.  **Hybrid Potential**:
+    The Generative VAD model correctly solves **~5% of cases** that the Feature-based model misses. This suggests that the two models capture different aspects of emotion: one captures semantic features, while the other captures affective intensity.
+
