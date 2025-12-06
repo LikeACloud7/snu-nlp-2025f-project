@@ -175,10 +175,10 @@ While the Feature-Based Direct model achieved the highest raw accuracy, the **Ge
 
 | Method | Type | Accuracy | **Macro-F1** | Interpretation |
 | :--- | :--- | :--- | :--- | :--- |
-| **Feature-Based Direct** | Discriminative | **58.49%** | **56.59%** | Best overall. LLM features are highly robust. |
+| **Feature-Based Direct** | Discriminative | **57.80%** | **56.59%** | Best overall. LLM features are highly robust. |
 | **Generative VAD** | Generative | **52.91%** | **51.35%** | **Maps to easier continuous space.** |
 | **Generative Direct** | Generative | 50.06% | 48.66% | Struggles to pinpoint exact complex labels. |
-| **Feature-Based VAD** | Discriminative | 25.47% | 24.26% | Regression loss is too high for features. |
+| **Feature-Based VAD** | Discriminative | 23.70% | 24.26% | Regression loss is too high for features. |
 
 > **Insight**: Predicting **abstract coordinates (VAD)** is an easier task for the LLM than retrieving the exact class name from 60 options. The VAD step simplifies the problem by converting a 60-way classification into a 3-dimensional regression.
 
